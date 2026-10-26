@@ -1,84 +1,116 @@
-import { forwardRef } from 'react';
-
-const INPUT =
-  'block w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 disabled:bg-slate-100 disabled:text-slate-500';
-
-function Wrapper({ label, htmlFor, error, hint, required, children }) {
+export function Input({ label, error, className = '', ...props }) {
   return (
-    <div>
+    <div className="w-full space-y-1.5">
       {label && (
-        <label htmlFor={htmlFor} className="mb-1 block text-sm font-medium text-slate-700">
-          {label} {required && <span className="text-red-500" aria-hidden="true">*</span>}
+        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+          {label}
         </label>
       )}
-      {children}
-      {hint && !error && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+      <input
+        {...props} // <-- Yeh sabse zaroori hai! Yeh react-hook-form ke onChange aur ref ko input se connect karta hai
+        className={`w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 transition-all ${
+          error ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+        } ${className}`}
+      />
+      {error && <p className="text-[11px] text-red-500 font-medium">{error}</p>}
+    </div>
+  );
+}
+export function Select({
+  label,
+  error,
+  helperText,
+  children,
+  className = "",
+  ...props
+}) {
+  return (
+    <div className="w-full">
+      {label && (
+        <label className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
+          {label}
+        </label>
+      )}
+      <select
+        className={`w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs sm:text-sm text-slate-900 dark:text-white transition focus:border-indigo-500 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 disabled:bg-slate-50 dark:disabled:bg-slate-850 disabled:text-slate-400 ${
+          error
+            ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+            : ""
+        } ${className}`}
+        {...props}
+      >
+        {children}
+      </select>
       {error && (
-        <p role="alert" className="mt-1 text-xs text-red-600">
-          {error}
-        </p>
+        <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>
+      )}
+      {!error && helperText && (
+        <p className="mt-1 text-[11px] text-slate-400">{helperText}</p>
       )}
     </div>
   );
 }
 
-export const Input = forwardRef(function Input({ label, error, hint, required, id, className = '', ...props }, ref) {
-  const fieldId = id || props.name;
+export function Textarea({
+  label,
+  error,
+  helperText,
+  className = "",
+  ...props
+}) {
   return (
-    <Wrapper label={label} htmlFor={fieldId} error={error} hint={hint} required={required}>
-      <input
-        ref={ref}
-        id={fieldId}
-        aria-invalid={Boolean(error)}
-        className={`${INPUT} ${error ? 'border-red-400' : 'border-slate-300'} ${className}`}
-        {...props}
-      />
-    </Wrapper>
-  );
-});
-
-export const Select = forwardRef(function Select({ label, error, hint, required, id, children, className = '', ...props }, ref) {
-  const fieldId = id || props.name;
-  return (
-    <Wrapper label={label} htmlFor={fieldId} error={error} hint={hint} required={required}>
-      <select
-        ref={ref}
-        id={fieldId}
-        aria-invalid={Boolean(error)}
-        className={`${INPUT} ${error ? 'border-red-400' : 'border-slate-300'} ${className}`}
-        {...props}
-      >
-        {children}
-      </select>
-    </Wrapper>
-  );
-});
-
-export const Textarea = forwardRef(function Textarea({ label, error, hint, required, id, className = '', ...props }, ref) {
-  const fieldId = id || props.name;
-  return (
-    <Wrapper label={label} htmlFor={fieldId} error={error} hint={hint} required={required}>
+    <div className="w-full">
+      {label && (
+        <label className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
+          {label}
+        </label>
+      )}
       <textarea
-        ref={ref}
-        id={fieldId}
+        className={`w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 transition focus:border-indigo-500 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 disabled:bg-slate-50 dark:disabled:bg-slate-850 disabled:text-slate-400 ${
+          error
+            ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+            : ""
+        } ${className}`}
         rows={3}
-        aria-invalid={Boolean(error)}
-        className={`${INPUT} ${error ? 'border-red-400' : 'border-slate-300'} ${className}`}
         {...props}
       />
-    </Wrapper>
-  );
-});
-
-export const Checkbox = forwardRef(function Checkbox({ label, hint, id, ...props }, ref) {
-  const fieldId = id || props.name;
-  return (
-    <div className="flex items-start gap-2">
-      <input ref={ref} id={fieldId} type="checkbox" className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" {...props} />
-      <label htmlFor={fieldId} className="text-sm text-slate-700">
-        {label}
-        {hint && <span className="block text-xs text-slate-500">{hint}</span>}
-      </label>
+      {error && (
+        <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>
+      )}
+      {!error && helperText && (
+        <p className="mt-1 text-[11px] text-slate-400">{helperText}</p>
+      )}
     </div>
   );
-});
+}
+
+export function Checkbox({
+  label,
+  error,
+  helperText,
+  className = "",
+  ...props
+}) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <input
+        type="checkbox"
+        className={`h-4 w-4 rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500 mt-0.5 ${className}`}
+        {...props}
+      />
+      <div>
+        {label && (
+          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            {label}
+          </label>
+        )}
+        {error && (
+          <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+        )}
+        {!error && helperText && (
+          <p className="text-[11px] text-slate-400">{helperText}</p>
+        )}
+      </div>
+    </div>
+  );
+}

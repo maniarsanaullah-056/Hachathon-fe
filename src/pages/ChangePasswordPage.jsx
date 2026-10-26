@@ -1,59 +1,92 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { Link, useNavigate } from 'react-router-dom';
-import AuthLayout from '../layouts/AuthLayout.jsx';
-import { Input } from '../components/ui/Field.jsx';
-import { Button, ErrorBanner } from '../components/ui/Common.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
-import { getErrorMessage } from '../utils/format.js';
-
-const PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/;
+import { PageHeader, Card, Button, ErrorBanner } from '../components/ui/Common.jsx';
+import { Input } from '../components/ui/Field.jsx';
+import { KeyRound, ShieldCheck } from 'lucide-react';
 
 export default function ChangePasswordPage() {
-  const { user, changePassword, logout } = useAuth();
+  const { changePassword, user } = useAuth();
   const toast = useToast();
-  const navigate = useNavigate();
-  const [serverError, setServerError] = useState('');
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm();
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const forced = user?.mustChangePassword;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
 
-  const onSubmit = async (v) => {
-    setServerError('');
+    if (newPassword.length < 8) {
+      setError('New password must be at least 8 characters long.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError('New passwords do not match.');
+      return;
+    }
+
+    setLoading(true);
     try {
-      await changePassword(v.currentPassword, v.newPassword);
-      toast.success('Password changed successfully');
-      navigate('/', { replace: true });
+      await changePassword(currentPassword, newPassword);
+      toast.success('Password changed successfully! You may now access the full portal.');
+      window.location.href = '/';
     } catch (err) {
-      setServerError(getErrorMessage(err));
+      setError(err.response?.data?.message || 'Failed to change password');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <AuthLayout
-      title="Change password"
-      subtitle={forced ? 'You are using a temporary password. Please set a new one to continue.' : 'Choose a strong new password'}
-    >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-        <ErrorBanner message={serverError} />
-        <Input label="Current password" type="password" autoComplete="current-password" required error={errors.currentPassword?.message} {...register('currentPassword', { required: 'Current password is required' })} />
-        <Input label="New password" type="password" autoComplete="new-password" required hint="8+ chars with upper, lower and a number" error={errors.newPassword?.message} {...register('newPassword', { required: 'New password is required', pattern: { value: PASSWORD_RE, message: 'Needs 8+ chars, upper, lower and a number' } })} />
-        <Input label="Confirm new password" type="password" autoComplete="new-password" required error={errors.confirmPassword?.message} {...register('confirmPassword', { required: 'Confirm your new password', validate: (val) => val === watch('newPassword') || 'Passwords do not match' })} />
-        <Button type="submit" className="w-full" loading={isSubmitting}>Update password</Button>
-        <div className="text-center text-sm">
-          {forced ? (
-            <button type="button" onClick={logout} className="text-slate-500 hover:underline">Log out instead</button>
-          ) : (
-            <Link to="/" className="text-indigo-600 hover:underline">Back to dashboard</Link>
-          )}
+    <div className="max-w-md mx-auto py-12 px-4">
+      <div className="text-center mb-6">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 mb-3">
+          <KeyRound className="h-6 w-6" />
         </div>
-      </form>
-    </AuthLayout>
+        <h1 className="text-xl font-bold text-slate-900 dark:text-white">
+          {user?.mustChangePassword ? 'Action Required: Set New Password' : 'Change Your Password'}
+        </h1>
+        <p className="mt-1 text-xs text-slate-500">
+          {user?.mustChangePassword
+            ? 'For security, temporary logins require an immediate password update.'
+            : 'Enter your current password and pick a strong new one.'}
+        </p>
+      </div>
+
+      <Card>
+        <ErrorBanner message={error} />
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <Input
+            type="password"
+            label="Current / Temp Password *"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            required
+          />
+          <Input
+            type="password"
+            label="New Password (min 8 chars) *"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+          />
+          <Input
+            type="password"
+            label="Confirm New Password *"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+
+          <Button type="submit" loading={loading} className="w-full mt-2">
+            <ShieldCheck className="h-4 w-4" />
+            <span>Update Password</span>
+          </Button>
+        </form>
+      </Card>
+    </div>
   );
 }

@@ -1,161 +1,293 @@
 import { useEffect, useState } from 'react';
+import { MapPin, Navigation, Clock, ShieldAlert, Save } from 'lucide-react';
 import useFetch from '../hooks/useFetch.js';
-import { companyApi } from '../services/orgService.js';
+import { settingsApi } from '../services/hcmServices.js';
+import { PageHeader, Card, Button, ErrorBanner, Spinner } from '../components/ui/Common.jsx';
+import { Input } from '../components/ui/Field.jsx';
 import { useToast } from '../context/ToastContext.jsx';
-import { getErrorMessage, getFieldErrors } from '../utils/format.js';
-import { Button, Card, ErrorBanner, PageHeader, Spinner } from '../components/ui/Common.jsx';
-import { Checkbox, Input, Textarea } from '../components/ui/Field.jsx';
-
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-const timezones = (() => {
-  try {
-    return Intl.supportedValuesOf('timeZone');
-  } catch {
-    return ['Asia/Karachi', 'UTC'];
-  }
-})();
 
 export default function CompanySettingsPage() {
   const toast = useToast();
-  const { data: company, loading, error, reload } = useFetch(() => companyApi.get(), []);
-  const [form, setForm] = useState(null);
-  const [policies, setPolicies] = useState([]);
-  const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
-  const [savingPolicies, setSavingPolicies] = useState(false);
+
+  // Form State
+  const [officeStartTime, setOfficeStartTime] = useState('09:00');
+  const [officeEndTime, setOfficeEndTime] = useState('18:00');
+  const [graceMinutes, setGraceMinutes] = useState(15);
+  const [halfDayThresholdHours, setHalfDayThresholdHours] = useState(5);
+  const [weekendDays, setWeekendDays] = useState([0, 6]); // 0=Sunday, 6=Saturday
+  const [latitude, setLatitude] = useState(24.8607);
+  const [longitude, setLongitude] = useState(67.0011);
+  const [radiusMeters, setRadiusMeters] = useState(150);
+
+  // Late penalty rules
+  const [latePenaltyEnabled, setLatePenaltyEnabled] = useState(true);
+  const [latesThreshold, setLatesThreshold] = useState(3);
+  const [deductionDays, setDeductionDays] = useState(0.5);
+
+  const { data: settingsData, loading, error, reload } = useFetch(
+    () => settingsApi.get(),
+    []
+  );
 
   useEffect(() => {
-    if (!company) return;
-    setForm({
-      name: company.name,
-      timezone: company.timezone,
-      officeStartTime: company.officeStartTime,
-      officeEndTime: company.officeEndTime,
-      graceMinutes: company.graceMinutes,
-      halfDayThresholdHours: company.halfDayThresholdHours,
-      weekendDays: [...company.weekendDays],
-      latitude: company.officeLocation?.latitude ?? '',
-      longitude: company.officeLocation?.longitude ?? '',
-      radiusMeters: company.officeLocation?.radiusMeters ?? 200,
-    });
-    setPolicies((company.policies || []).map((p) => ({ title: p.title, content: p.content })));
-  }, [company]);
+    if (settingsData) {
+      const s = settingsData.settings || settingsData;
+      if (s.officeStartTime) setOfficeStartTime(s.officeStartTime);
+      if (s.officeEndTime) setOfficeEndTime(s.officeEndTime);
+      if (s.graceMinutes !== undefined) setGraceMinutes(s.graceMinutes);
+      if (s.halfDayThresholdHours !== undefined) setHalfDayThresholdHours(s.halfDayThresholdHours);
+      if (s.weekendDays) setWeekendDays(s.weekendDays);
+      if (s.officeLocation) {
+        setLatitude(s.officeLocation.latitude ?? 24.8607);
+        setLongitude(s.officeLocation.longitude ?? 67.0011);
+        setRadiusMeters(s.officeLocation.radiusMeters ?? 150);
+      }
+      if (s.latePenaltyRule) {
+        setLatePenaltyEnabled(s.latePenaltyRule.enabled ?? true);
+        setLatesThreshold(s.latePenaltyRule.latesThreshold ?? 3);
+        setDeductionDays(s.latePenaltyRule.deductionDays ?? 0.5);
+      }
+    }
+  }, [settingsData]);
 
-  if (loading) return <div className="flex justify-center py-16"><Spinner /></div>;
-  if (error) return <ErrorBanner message={error} onRetry={reload} />;
-  if (!form) return null;
+  const handleUseCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLatitude(Number(pos.coords.latitude.toFixed(6)));
+          setLongitude(Number(pos.coords.longitude.toFixed(6)));
+          toast.success('Current location detected and applied!');
+        },
+        (err) => {
+          toast.error('Unable to fetch current location: ' + err.message);
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      toast.error('Geolocation not supported by this browser');
+    }
+  };
 
-  const set = (name, value) => setForm((f) => ({ ...f, [name]: value }));
-  const toggleDay = (day) =>
-    set('weekendDays', form.weekendDays.includes(day) ? form.weekendDays.filter((d) => d !== day) : [...form.weekendDays, day].sort());
-  const num = (v) => (v === '' || v === null ? null : Number(v));
+  const toggleWeekendDay = (day) => {
+    setWeekendDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+    );
+  };
 
-  const saveSettings = async (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
-    setErrors({});
     try {
-      await companyApi.update({
-        name: form.name.trim(),
-        timezone: form.timezone,
-        officeStartTime: form.officeStartTime,
-        officeEndTime: form.officeEndTime,
-        graceMinutes: Number(form.graceMinutes),
-        halfDayThresholdHours: Number(form.halfDayThresholdHours),
-        weekendDays: form.weekendDays,
-        officeLocation: { latitude: num(form.latitude), longitude: num(form.longitude), radiusMeters: num(form.radiusMeters) ?? 200 },
-      });
-      toast.success('Company settings saved');
+      const payload = {
+        officeStartTime,
+        officeEndTime,
+        graceMinutes: Number(graceMinutes),
+        halfDayThresholdHours: Number(halfDayThresholdHours),
+        weekendDays,
+        officeLocation: {
+          latitude: Number(latitude),
+          longitude: Number(longitude),
+          radiusMeters: Number(radiusMeters),
+        },
+        latePenaltyRule: {
+          enabled: latePenaltyEnabled,
+          latesThreshold: Number(latesThreshold),
+          deductionDays: Number(deductionDays),
+        },
+      };
+
+      await settingsApi.update(payload);
+      toast.success('Company settings & geofence perimeters updated!');
       reload();
     } catch (err) {
-      setErrors(getFieldErrors(err));
-      toast.error(getErrorMessage(err));
+      toast.error(err.response?.data?.message || 'Failed to update company settings');
     } finally {
       setSaving(false);
     }
   };
 
-  const savePolicies = async () => {
-    setSavingPolicies(true);
-    try {
-      await companyApi.updatePolicies(policies.map((p) => ({ title: p.title.trim(), content: p.content.trim() })));
-      toast.success('Policies saved');
-      reload();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSavingPolicies(false);
-    }
-  };
-
-  const setPolicy = (i, key, value) => setPolicies((list) => list.map((p, idx) => (idx === i ? { ...p, [key]: value } : p)));
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <>
-      <PageHeader title="Company settings" description="These rules apply to all new attendance and leave calculations." />
-      <div className="space-y-6">
-        <form onSubmit={saveSettings} noValidate>
-          <Card title="Organization & working hours" actions={<Button type="submit" loading={saving}>Save settings</Button>}>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Input label="Company name" required value={form.name} onChange={(e) => set('name', e.target.value)} error={errors.name} />
-              <div>
-                <Input label="Timezone" required list="tz-list" value={form.timezone} onChange={(e) => set('timezone', e.target.value)} error={errors.timezone} hint="IANA timezone, e.g. Asia/Karachi" />
-                <datalist id="tz-list">{timezones.map((tz) => <option key={tz} value={tz} />)}</datalist>
-              </div>
-              <Input label="Office start time" type="time" required value={form.officeStartTime} onChange={(e) => set('officeStartTime', e.target.value)} error={errors.officeStartTime} />
-              <Input label="Office end time" type="time" required value={form.officeEndTime} onChange={(e) => set('officeEndTime', e.target.value)} error={errors.officeEndTime} />
-              <Input label="Grace period (minutes)" type="number" min="0" max="120" value={form.graceMinutes} onChange={(e) => set('graceMinutes', e.target.value)} error={errors.graceMinutes} hint="Late if check-in is after start time + grace" />
-              <Input label="Half-day threshold (hours)" type="number" min="0" max="12" step="0.5" value={form.halfDayThresholdHours} onChange={(e) => set('halfDayThresholdHours', e.target.value)} error={errors.halfDayThresholdHours} hint="Work below this many hours counts as a half-day" />
+    <div className="space-y-6">
+      <PageHeader
+        title="Company Settings & Geofence"
+        description="Office timings, grace rules, weekend schedules, and GPS perimeter parameters for camera attendance."
+      />
+
+      <ErrorBanner message={error} onRetry={reload} />
+
+      {loading && !settingsData ? (
+        <Spinner size="lg" />
+      ) : (
+        <form onSubmit={handleSave} className="space-y-6">
+          {/* Office Timings & Attendance Rules */}
+          <Card title="Working Hours & Attendance Rules" description="Define workday start, grace threshold and weekend schedules">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <Input
+                type="time"
+                label="Office Start Time *"
+                value={officeStartTime}
+                onChange={(e) => setOfficeStartTime(e.target.value)}
+                required
+              />
+              <Input
+                type="time"
+                label="Office End Time *"
+                value={officeEndTime}
+                onChange={(e) => setOfficeEndTime(e.target.value)}
+                required
+              />
+              <Input
+                type="number"
+                label="Grace Period (Minutes) *"
+                value={graceMinutes}
+                onChange={(e) => setGraceMinutes(e.target.value)}
+                min="0"
+                max="60"
+                required
+              />
+              <Input
+                type="number"
+                label="Half Day Min Hours *"
+                value={halfDayThresholdHours}
+                onChange={(e) => setHalfDayThresholdHours(e.target.value)}
+                min="1"
+                max="12"
+                required
+              />
             </div>
 
-            <fieldset className="mt-6">
-              <legend className="mb-2 text-sm font-medium text-slate-700">Weekend days</legend>
-              <div className="flex flex-wrap gap-x-6 gap-y-2">
-                {DAYS.map((name, idx) => (
-                  <Checkbox key={name} name={`day-${idx}`} label={name} checked={form.weekendDays.includes(idx)} onChange={() => toggleDay(idx)} />
-                ))}
-              </div>
-              {errors.weekendDays && <p role="alert" className="mt-1 text-xs text-red-600">{errors.weekendDays}</p>}
-            </fieldset>
-
-            <div className="mt-6 border-t border-slate-100 pt-5">
-              <h3 className="text-sm font-semibold text-slate-900">Office location (optional)</h3>
-              <p className="mb-3 text-xs text-slate-500">Used later for location-verified attendance. Leave empty to skip.</p>
-              <div className="grid gap-4 md:grid-cols-3">
-                <Input label="Latitude" type="number" step="any" value={form.latitude} onChange={(e) => set('latitude', e.target.value)} error={errors['officeLocation.latitude']} />
-                <Input label="Longitude" type="number" step="any" value={form.longitude} onChange={(e) => set('longitude', e.target.value)} error={errors['officeLocation.longitude']} />
-                <Input label="Allowed radius (meters)" type="number" min="10" max="5000" value={form.radiusMeters} onChange={(e) => set('radiusMeters', e.target.value)} error={errors['officeLocation.radiusMeters']} />
+            {/* Weekend Picker */}
+            <div className="mt-5 border-t border-slate-100 dark:border-slate-800 pt-4">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                Designated Weekend Days
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {dayNames.map((name, idx) => {
+                  const isSelected = weekendDays.includes(idx);
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => toggleWeekendDay(idx)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
+                        isSelected
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'
+                      }`}
+                    >
+                      {name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </Card>
-        </form>
 
-        <Card
-          title="Company policies"
-          description="The AI assistant will answer policy questions only from what you write here."
-          actions={
-            <>
-              <Button variant="secondary" onClick={() => setPolicies((p) => [...p, { title: '', content: '' }])}>Add policy</Button>
-              <Button onClick={savePolicies} loading={savingPolicies}>Save policies</Button>
-            </>
-          }
-        >
-          {policies.length === 0 ? (
-            <p className="text-sm text-slate-500">No policies yet. Add one, then save.</p>
-          ) : (
-            <div className="space-y-4">
-              {policies.map((p, i) => (
-                <div key={i} className="rounded-lg border border-slate-200 p-4">
-                  <Input label={`Policy ${i + 1} title`} value={p.title} onChange={(e) => setPolicy(i, 'title', e.target.value)} />
-                  <div className="mt-3"><Textarea label="Content" rows={4} value={p.content} onChange={(e) => setPolicy(i, 'content', e.target.value)} /></div>
-                  <button type="button" onClick={() => setPolicies((list) => list.filter((_, idx) => idx !== i))} className="mt-2 text-sm text-red-600 hover:underline">Remove</button>
-                </div>
-              ))}
+          {/* Late Penalty Formula */}
+          <Card title="Late Arrival Penalty Rules" description="Automated payroll deductions for frequent late punches">
+            <div className="flex items-center gap-3 mb-4">
+              <input
+                type="checkbox"
+                id="lateEnabled"
+                checked={latePenaltyEnabled}
+                onChange={(e) => setLatePenaltyEnabled(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <label htmlFor="lateEnabled" className="text-xs font-semibold text-slate-900 dark:text-white cursor-pointer">
+                Enable automated late penalty deduction
+              </label>
             </div>
-          )}
-        </Card>
-      </div>
-    </>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Input
+                type="number"
+                label="Consecutive Lates Threshold"
+                value={latesThreshold}
+                onChange={(e) => setLatesThreshold(e.target.value)}
+                helperText="e.g. 3 lates in a month triggers deduction"
+                disabled={!latePenaltyEnabled}
+              />
+              <Input
+                type="number"
+                step="0.5"
+                label="Deduction Days (Per Threshold)"
+                value={deductionDays}
+                onChange={(e) => setDeductionDays(e.target.value)}
+                helperText="e.g. 0.5 day wage deduction"
+                disabled={!latePenaltyEnabled}
+              />
+            </div>
+          </Card>
+
+          {/* Office Geofence & Location */}
+          <Card
+            title="Office Location & Geofence Perimeter"
+            description="Geographical coordinates and allowed radius for mobile/camera check-in"
+            actions={
+              <Button type="button" variant="secondary" onClick={handleUseCurrentLocation} className="text-xs">
+                <Navigation className="h-3.5 w-3.5 text-indigo-600" />
+                <span>Use My Current Location</span>
+              </Button>
+            }
+          >
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Input
+                type="number"
+                step="0.000001"
+                label="Office Latitude *"
+                value={latitude}
+                onChange={(e) => setLatitude(e.target.value)}
+                required
+              />
+              <Input
+                type="number"
+                step="0.000001"
+                label="Office Longitude *"
+                value={longitude}
+                onChange={(e) => setLongitude(e.target.value)}
+                required
+              />
+              <Input
+                type="number"
+                label="Allowed Geofence Radius (Meters) *"
+                value={radiusMeters}
+                onChange={(e) => setRadiusMeters(e.target.value)}
+                min="20"
+                max="5000"
+                required
+              />
+            </div>
+
+            {/* Visual Geofence Map / Radar Preview */}
+            <div className="mt-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 p-6 flex flex-col items-center justify-center text-center">
+              <div className="relative flex items-center justify-center h-44 w-44 rounded-full border-2 border-dashed border-teal-500/50 bg-teal-500/5 animate-pulse">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg">
+                  <MapPin className="h-5 w-5" />
+                </div>
+                <div className="absolute top-2 right-2 text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/80 px-2 py-0.5 rounded-full">
+                  {radiusMeters}m Geofence
+                </div>
+              </div>
+              <p className="mt-3 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Coordinates: {latitude}, {longitude}
+              </p>
+              <p className="text-[11px] text-slate-400 max-w-sm mt-0.5">
+                Check-in calls outside this {radiusMeters}m perimeter will be logged or rejected automatically.
+              </p>
+            </div>
+          </Card>
+
+          <div className="flex justify-end">
+            <Button type="submit" loading={saving} className="px-6">
+              <Save className="h-4 w-4" />
+              <span>Save Company Settings</span>
+            </Button>
+          </div>
+        </form>
+      )}
+    </div>
   );
 }
