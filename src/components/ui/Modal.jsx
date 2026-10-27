@@ -15,18 +15,18 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 backdrop-blur-xs sm:items-center sm:p-4 animate-in fade-in duration-100"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div role="dialog" aria-modal="true" aria-label={title} className={`flex max-h-[92vh] w-full flex-col rounded-t-2xl bg-white shadow-xl sm:rounded-2xl ${SIZES[size]}`}>
-        <header className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-          <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="rounded p-1 text-2xl leading-none text-slate-400 hover:text-slate-700">
-            ×
+      <div role="dialog" aria-modal="true" aria-label={title} className={`flex max-h-[92vh] w-full flex-col rounded-t-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl sm:rounded-2xl ${SIZES[size]}`}>
+        <header className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-5 py-4">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">{title}</h2>
+          <button type="button" onClick={onClose} aria-label="Close" className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700">
+            ✕
           </button>
         </header>
         <div className="overflow-y-auto px-5 py-4">{children}</div>
-        {footer && <footer className="flex flex-wrap justify-end gap-2 border-t border-slate-100 px-5 py-3">{footer}</footer>}
+        {footer && <footer className="flex flex-wrap justify-end gap-2 border-t border-slate-100 dark:border-slate-800 px-5 py-3">{footer}</footer>}
       </div>
     </div>
   );
@@ -51,7 +51,9 @@ export function ConfirmDialog({ open, title, message, confirmLabel = 'Confirm', 
         </>
       }
     >
-      <p className="text-sm text-slate-600">{message}</p>
+      <p className="text-sm text-slate-600 dark:text-slate-400">{message}</p>
     </Modal>
   );
 }
+
+export default Modal;

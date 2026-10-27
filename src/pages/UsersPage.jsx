@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import useFetch from '../hooks/useFetch.js';
 import { usersApi } from '../services/peopleService.js';
 import { useToast } from '../context/ToastContext.jsx';
@@ -20,24 +19,57 @@ export default function UsersPage() {
   const [confirm, setConfirm] = useState(null); // { type: 'status'|'reset', user }
   const [busy, setBusy] = useState(false);
 
-  const { register, handleSubmit, reset, setError, formState: { errors, isSubmitting } } = useForm();
+  // Custom Form States
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const openCreate = () => {
-    reset({ name: '', email: '' });
+    setName('');
+    setEmail('');
+    setErrors({});
     setCreateOpen(true);
   };
 
-  const onCreate = async (values) => {
+  const validateForm = () => {
+    const newErrors = {};
+    if (!name.trim()) {
+      newErrors.name = 'Name is required';
+    } else if (name.trim().length < 2) {
+      newErrors.name = 'At least 2 characters';
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!emailRegex.test(email)) {
+      newErrors.email = 'Enter a valid email';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const onCreate = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
     try {
-      const res = await usersApi.createHr(values);
+      const res = await usersApi.createHr({ name: name.trim(), email: email.trim() });
       setCreateOpen(false);
       setTempInfo({ email: res.user.email, password: res.tempPassword });
       toast.success('HR account created');
       reload();
     } catch (err) {
       const fieldErrors = getFieldErrors(err);
-      Object.entries(fieldErrors).forEach(([field, message]) => setError(field, { message }));
+      if (Object.keys(fieldErrors).length > 0) {
+        setErrors(fieldErrors);
+      }
       toast.error(getErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -94,9 +126,30 @@ export default function UsersPage() {
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Add HR account" size="sm"
         footer={<><Button variant="secondary" onClick={() => setCreateOpen(false)}>Cancel</Button><Button type="submit" form="hr-form" loading={isSubmitting}>Create account</Button></>}>
-        <form id="hr-form" onSubmit={handleSubmit(onCreate)} className="space-y-4" noValidate>
-          <Input label="Full name" required error={errors.name?.message} {...register('name', { required: 'Name is required', minLength: { value: 2, message: 'At least 2 characters' } })} />
-          <Input label="Email" type="email" required error={errors.email?.message} {...register('email', { required: 'Email is required', pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Enter a valid email' } })} />
+        <form id="hr-form" onSubmit={onCreate} className="space-y-4" noValidate>
+          <Input 
+            label="Full name" 
+            required 
+            placeholder="e.g. Muhammad Hammad"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (errors.name) setErrors((prev) => ({ ...prev, name: '' }));
+            }}
+            error={errors.name} 
+          />
+          <Input 
+            label="Email" 
+            type="email" 
+            required 
+            placeholder="e.g. hammad@gmail.com"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (errors.email) setErrors((prev) => ({ ...prev, email: '' }));
+            }}
+            error={errors.email} 
+          />
           <p className="text-xs text-slate-500">A secure temporary password is generated. The HR user must change it at first login.</p>
         </form>
       </Modal>
