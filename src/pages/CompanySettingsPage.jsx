@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MapPin, Navigation, Clock, ShieldAlert, Save } from 'lucide-react';
+import { MapPin, Navigation, Save } from 'lucide-react';
 import useFetch from '../hooks/useFetch.js';
 import { settingsApi } from '../services/hcmServices.js';
 import { PageHeader, Card, Button, ErrorBanner, Spinner } from '../components/ui/Common.jsx';
@@ -204,10 +204,10 @@ export default function CompanySettingsPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <Input
                 type="number"
-                label="Consecutive Lates Threshold"
+                label="Lates per Month Threshold"
                 value={latesThreshold}
                 onChange={(e) => setLatesThreshold(e.target.value)}
-                helperText="e.g. 3 lates in a month triggers deduction"
+                helperText="Any 3 lates in a month trigger the deduction."
                 disabled={!latePenaltyEnabled}
               />
               <Input
@@ -216,7 +216,7 @@ export default function CompanySettingsPage() {
                 label="Deduction Days (Per Threshold)"
                 value={deductionDays}
                 onChange={(e) => setDeductionDays(e.target.value)}
-                helperText="e.g. 0.5 day wage deduction"
+                helperText="For example, deduct half a day’s wages."
                 disabled={!latePenaltyEnabled}
               />
             </div>

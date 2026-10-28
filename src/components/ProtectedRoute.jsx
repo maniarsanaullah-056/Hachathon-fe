@@ -9,10 +9,10 @@ export default function ProtectedRoute({ roles }) {
   const location = useLocation();
 
   if (loading) return <FullPageSpinner />;
+  if (user && roles && !roles.includes(user.role)) return <Navigate to="/unauthorized" replace />;
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
   if (user.mustChangePassword && location.pathname !== '/change-password') {
     return <Navigate to="/change-password" replace />;
   }
-  if (roles && !roles.includes(user.role)) return <Navigate to="/unauthorized" replace />;
   return <Outlet />;
 }

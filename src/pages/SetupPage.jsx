@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { Button, ErrorBanner } from '../components/ui/Common.jsx';
 import { Input } from '../components/ui/Field.jsx';
-import { Sparkles, Building2, User, Lock, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Building2, User, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 export default function SetupPage() {
   const { setupCompany } = useAuth();
@@ -137,7 +137,7 @@ export default function SetupPage() {
               required
             />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Input
                 type="password"
                 label="Admin Password *"

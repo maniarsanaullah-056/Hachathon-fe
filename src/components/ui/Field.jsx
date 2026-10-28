@@ -1,13 +1,18 @@
+import { useId } from 'react';
+
 export function Input({ label, error, className = '', ...props }) {
+  const generatedId = useId();
+  const inputId = props.id || generatedId;
   return (
     <div className="w-full space-y-1.5">
       {label && (
-        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+        <label htmlFor={inputId} className="block text-xs font-medium text-slate-700 dark:text-slate-300">
           {label}
         </label>
       )}
       <input
         {...props} // <-- Yeh sabse zaroori hai! Yeh react-hook-form ke onChange aur ref ko input se connect karta hai
+        id={inputId}
         className={`w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 transition-all ${
           error ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
         } ${className}`}
@@ -24,15 +29,18 @@ export function Select({
   className = "",
   ...props
 }) {
+  const generatedId = useId();
+  const selectId = props.id || generatedId;
   return (
     <div className="w-full">
       {label && (
-        <label className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
+        <label htmlFor={selectId} className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
           {label}
         </label>
       )}
       <select
-        className={`w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs sm:text-sm text-slate-900 dark:text-white transition focus:border-indigo-500 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 disabled:bg-slate-50 dark:disabled:bg-slate-850 disabled:text-slate-400 ${
+        id={selectId}
+        className={`w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs sm:text-sm text-slate-900 dark:text-white transition focus:border-indigo-500 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-400 ${
           error
             ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
             : ""
@@ -58,15 +66,18 @@ export function Textarea({
   className = "",
   ...props
 }) {
+  const generatedId = useId();
+  const textareaId = props.id || generatedId;
   return (
     <div className="w-full">
       {label && (
-        <label className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
+        <label htmlFor={textareaId} className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
           {label}
         </label>
       )}
       <textarea
-        className={`w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 transition focus:border-indigo-500 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 disabled:bg-slate-50 dark:disabled:bg-slate-850 disabled:text-slate-400 ${
+        id={textareaId}
+        className={`w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 transition focus:border-indigo-500 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-400 ${
           error
             ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
             : ""

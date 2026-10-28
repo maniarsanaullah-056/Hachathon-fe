@@ -281,7 +281,7 @@ export default function LeavePage() {
           </div>
 
           {startDate && endDate && (
-            <div className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-3 text-xs flex justify-between">
+            <div className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 p-3 text-xs flex justify-between">
               <span className="text-slate-500">Calculated Working Days:</span>
               <span className="font-bold text-indigo-600 dark:text-indigo-400">{calcDaysPreview()} days</span>
             </div>

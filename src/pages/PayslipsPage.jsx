@@ -114,7 +114,7 @@ export default function PayslipsPage() {
         {selectedSlip && (
           <div className="space-y-4 pt-2 text-xs">
             {/* Header section */}
-            <div className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-4 flex justify-between items-center">
+            <div className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 p-4 flex justify-between items-center">
               <div>
                 <p className="font-bold text-sm text-slate-900 dark:text-white">{selectedSlip.employee?.fullName || 'Employee'}</p>
                 <p className="text-[11px] text-slate-400">{selectedSlip.employee?.employeeCode} • {selectedSlip.employee?.designation?.title || 'Staff'}</p>

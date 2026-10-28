@@ -159,13 +159,13 @@ export default function EmployeeAttendancePage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="rounded-xl border border-slate-100 dark:border-slate-800 p-3 bg-slate-50 dark:bg-slate-850">
+                  <div className="rounded-xl border border-slate-100 dark:border-slate-800 p-3 bg-slate-50 dark:bg-slate-800">
                     <span className="text-slate-400 text-[10px]">Check In</span>
                     <p className="mt-1 font-semibold text-slate-900 dark:text-white">
                       {selectedDay.checkInTime ? new Date(selectedDay.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                     </p>
                   </div>
-                  <div className="rounded-xl border border-slate-100 dark:border-slate-800 p-3 bg-slate-50 dark:bg-slate-850">
+                  <div className="rounded-xl border border-slate-100 dark:border-slate-800 p-3 bg-slate-50 dark:bg-slate-800">
                     <span className="text-slate-400 text-[10px]">Check Out</span>
                     <p className="mt-1 font-semibold text-slate-900 dark:text-white">
                       {selectedDay.checkOutTime ? new Date(selectedDay.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}

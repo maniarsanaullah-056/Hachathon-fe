@@ -5,8 +5,10 @@ const ThemeContext = createContext();
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('hcm_theme');
-    if (saved) return saved;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    const initial = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.classList.toggle('dark', initial === 'dark');
+    document.documentElement.style.colorScheme = initial;
+    return initial;
   });
 
   useEffect(() => {
@@ -16,6 +18,7 @@ export function ThemeProvider({ children }) {
     } else {
       root.classList.remove('dark');
     }
+    root.style.colorScheme = theme;
     localStorage.setItem('hcm_theme', theme);
   }, [theme]);
 

@@ -239,7 +239,7 @@ export default function EmployeeDashboard() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {metrics.leaveBalances.map((b, i) => (
-                <div key={i} className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850 p-3 text-center">
+                <div key={i} className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 p-3 text-center">
                   <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block truncate">{b.name}</span>
                   <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400 mt-1 block">{b.remaining ?? b.balance ?? 0}</span>
                   <span className="text-[10px] text-slate-400">days left</span>

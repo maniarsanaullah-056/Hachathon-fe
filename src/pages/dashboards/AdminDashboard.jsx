@@ -150,8 +150,8 @@ export default function AdminDashboard() {
         {/* Gender Breakdown & Tenure Buckets */}
         <Card title="Workforce Demographics" description="Diversity & tenure distribution">
           <div className="grid grid-cols-2 gap-4 py-2">
-            <div className="rounded-xl border border-slate-100 dark:border-slate-800/80 p-4 bg-slate-50/50 dark:bg-slate-850">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Gender Balance</span>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+              <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider dark:text-slate-300">Gender Balance</span>
               <div className="mt-3 space-y-2">
                 <div className="flex justify-between text-xs">
                   <span>Male</span>
@@ -168,8 +168,8 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-100 dark:border-slate-800/80 p-4 bg-slate-50/50 dark:bg-slate-850">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Tenure Groups</span>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+              <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider dark:text-slate-300">Tenure Groups</span>
               <div className="mt-3 space-y-2">
                 <div className="flex justify-between text-xs">
                   <span>&lt; 1 Year</span>

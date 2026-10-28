@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { Button, ErrorBanner } from '../components/ui/Common.jsx';
 import { Input } from '../components/ui/Field.jsx';
-import { Sparkles, ShieldCheck, ArrowRight, Lock, Mail, Building2 } from 'lucide-react';
+import { Sparkles, ArrowRight } from 'lucide-react';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -30,11 +30,6 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const fillDemo = (roleEmail) => {
-    setEmail(roleEmail);
-    setPassword('AdminPassword123');
   };
 
   return (
@@ -121,21 +116,6 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {/* Quick Fill Demo Helpers for Judges */}
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-xs">
-            <span className="font-semibold text-slate-700 dark:text-slate-300 block mb-2">
-              Judges Quick-Fill Credentials:
-            </span>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => fillDemo('admin@saylani.org')}
-                className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-2.5 py-1 text-[11px] text-indigo-600 dark:text-indigo-400 hover:border-indigo-400"
-              >
-                Admin (admin@saylani.org)
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

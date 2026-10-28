@@ -266,15 +266,15 @@ export default function PayrollPage() {
 
           {/* Breakdown Stats Cards */}
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-4">
+            <div className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 p-4">
               <span className="text-[11px] text-slate-400 uppercase font-semibold">Total Gross</span>
               <p className="mt-1 text-xl font-bold text-slate-900 dark:text-white">{formatCurrency(activeRun.totalGross || 0)}</p>
             </div>
-            <div className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-4">
+            <div className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 p-4">
               <span className="text-[11px] text-slate-400 uppercase font-semibold">Total Deductions</span>
               <p className="mt-1 text-xl font-bold text-red-600 dark:text-red-400">-{formatCurrency(activeRun.totalDeductions || 0)}</p>
             </div>
-            <div className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-4">
+            <div className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 p-4">
               <span className="text-[11px] text-slate-400 uppercase font-semibold">Total Net Payout</span>
               <p className="mt-1 text-xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(activeRun.totalNet || 0)}</p>
             </div>
